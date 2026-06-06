@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>富士山一日遊行程比較</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Shippori+Mincho:wght@400;700&display=swap');
+
+  :root {
+    --bg: #f7f4ef;
+    --ink: #1a1410;
+    --muted: #8a7e72;
+    --line: #d4ccc4;
+    --plan1: #c9735a;
+    --plan1-light: #f5e8e3;
+    --plan2: #4a7c6f;
+    --plan2-light: #d4e8e4;
+    --plan3: #5a6fa8;
+    --plan3-light: #d8dff0;
+    --bug: #d4380d;
+    --option: #8a6ab0;
+    --option-light: #ede8f5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Noto Sans TC', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 28px 14px 48px;
+  }
+
+  header { text-align: center; margin-bottom: 26px; }
+  header h1 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1.55rem; font-weight: 700;
+    letter-spacing: 0.12em; margin-bottom: 4px;
+  }
+  header p { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.06em; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px 16px;
+    justify-content: center; margin-bottom: 20px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.71rem; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+  .legend-dot.bug { background: #fff3f0; border: 2px dashed var(--bug); }
+  .legend-dot.option { background: var(--option-light); border: 2px dashed var(--option); }
+
+  /* Chart */
+  .chart-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .chart {
+    display: grid;
+    grid-template-columns: 46px repeat(3, 1fr);
+    min-width: 520px; max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .col-header {
+    padding: 10px 6px 12px; text-align: center;
+    border-bottom: 2px solid var(--ink);
+  }
+  .col-header.p1 { border-bottom-color: var(--plan1); }
+  .col-header.p2 { border-bottom-color: var(--plan2); }
+  .col-header.p3 { border-bottom-color: var(--plan3); }
+  .plan-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 2px; }
+  .plan-title { font-family: 'Shippori Mincho', serif; font-size: 0.8rem; font-weight: 700; line-height: 1.35; }
+  .plan-sub { font-size: 0.62rem; color: var(--muted); margin-top: 2px; }
+  .plan-price { font-size: 0.68rem; font-weight: 700; margin-top: 4px; }
+  .p1 .plan-price { color: var(--plan1); }
+  .p2 .plan-price { color: var(--plan2); }
+  .p3 .plan-price { color: var(--plan3); }
+
+  /* Spot block */
+  .act-block {
+    position: absolute; left: 3px; right: 3px;
+    border-radius: 5px; padding: 3px 6px;
+    overflow: hidden; z-index: 2;
+  }
+  .act-name {
+    font-size: 0.67rem; font-weight: 700; line-height: 1.2;
+    color: #fff; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .act-name.wrap {
+    white-space: normal; display: -webkit-box;
+    -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  }
+  .act-time { font-size: 0.57rem; color: rgba(255,255,255,0.78); margin-top: 1px; white-space: nowrap; }
+
+  /* Transport */
+  .transport-block {
+    position: absolute; left: 3px; right: 3px;
+    border-radius: 5px; z-index: 1; overflow: hidden;
+    background: repeating-linear-gradient(
+      45deg, #ccc5bc 0px, #ccc5bc 4px, #ddd8d2 4px, #ddd8d2 9px
+    );
+    display: flex; align-items: center; padding: 2px 6px;
+  }
+  .transport-label { font-size: 0.59rem; color: #7a7068; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Option block (either/or choice) */
+  .option-block {
+    position: absolute; border-radius: 5px;
+    padding: 3px 6px; overflow: hidden;
+    border: 2px dashed var(--option);
+    background: var(--option-light);
+    z-index: 2;
+  }
+  .option-tag {
+    display: inline-block; background: var(--option);
+    color: #fff; font-size: 0.5rem; font-weight: 700;
+    border-radius: 2px; padding: 0px 3px; margin-bottom: 1px;
+  }
+  .option-name {
+    font-size: 0.65rem; font-weight: 700; line-height: 1.2;
+    color: var(--option); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .option-time { font-size: 0.55rem; color: var(--option); opacity: 0.8; margin-top: 1px; }
+
+  /* BUG block */
+  .bug-block {
+    position: absolute; border-radius: 5px;
+    padding: 3px 6px; overflow: hidden;
+    border: 2px dashed var(--bug);
+    background: rgba(212,56,13,0.10);
+    z-index: 3;
+  }
+  .bug-tag {
+    display: inline-block; background: var(--bug);
+    color: #fff; font-size: 0.5rem; font-weight: 700;
+    border-radius: 2px; padding: 0px 3px; margin-bottom: 1px;
+  }
+  .bug-name {
+    font-size: 0.65rem; font-weight: 700; line-height: 1.2;
+    color: var(--bug); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .bug-time { font-size: 0.55rem; color: var(--bug); opacity: 0.8; margin-top: 1px; }
+
+  /* Section label */
+  .section-label {
+    position: absolute; right: 3px;
+    font-size: 0.52rem; letter-spacing: 0.06em;
+    color: var(--muted); opacity: 0.5;
+    writing-mode: vertical-rl; text-orientation: mixed; z-index: 0;
+  }
+
+  /* Comparison table */
+  .compare-wrap { max-width: 860px; margin: 28px auto 0; }
+  .compare-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1rem; font-weight: 700; letter-spacing: 0.1em;
+    margin-bottom: 14px; padding-bottom: 8px;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  table.compare {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.71rem; line-height: 1.55; min-width: 480px;
+  }
+  table.compare thead th {
+    padding: 8px 10px; text-align: center; font-weight: 700;
+    font-size: 0.68rem; border-bottom: 1.5px solid var(--ink); background: var(--bg);
+  }
+  table.compare thead th:first-child { text-align: left; width: 19%; color: var(--muted); font-weight: 400; }
+  table.compare thead th.h1 { color: var(--plan1); }
+  table.compare thead th.h2 { color: var(--plan2); }
+  table.compare thead th.h3 { color: var(--plan3); }
+  table.compare tbody tr:nth-child(even) td { background: rgba(0,0,0,0.022); }
+  table.compare td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.compare td:first-child { font-weight: 500; color: var(--muted); font-size: 0.66rem; white-space: nowrap; }
+  table.compare td:not(:first-child) { text-align: center; }
+  .check { color: #4a7c6f; }
+  .cross { color: #c9735a; opacity: 0.45; }
+  .same-row td:not(:first-child) { color: #3a5a90; font-weight: 600; }
+  .badge { display: inline-block; border-radius: 3px; padding: 1px 6px; font-size: 0.61rem; font-weight: 700; margin: 1px; }
+  .b1 { background: var(--plan1-light); color: var(--plan1); }
+  .b2 { background: var(--plan2-light); color: var(--plan2); }
+  .b3 { background: var(--plan3-light); color: var(--plan3); }
+  .price-row td { font-family: 'Shippori Mincho', serif; font-size: 0.8rem; font-weight: 700; }
+  .price-row td.h1v { color: var(--plan1); }
+  .price-row td.h2v { color: var(--plan2); }
+  .price-row td.h3v { color: var(--plan3); }
+  .warn { color: var(--bug); font-weight: 700; }
+  .opt-label { color: var(--option); font-weight: 700; }
+
+  @media print {
+    /* Force background graphics on */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    /* Keep page background */
+    body { background: var(--bg) !important; }
+    /* Show hyperlinks with URL after text */
+    a { color: inherit !important; text-decoration: underline !important; }
+    a[href]::after { content: none !important; } /* suppress auto URL append */
+    /* Prevent mid-chart page breaks */
+    .chart-wrap { page-break-inside: avoid; break-inside: avoid; }
+    .compare-wrap { page-break-inside: avoid; break-inside: avoid; }
+    /* Ensure chart overflow is visible for print */
+    .chart-wrap { overflow: visible !important; }
+    .chart { min-width: unset !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>富士山一日遊　行程比較</h1>
+  <p>三方案景點・停留時間視覺化對照</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--plan1)"></div>行程一景點</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--plan2)"></div>行程二景點</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--plan3)"></div>行程三景點</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ccc5bc"></div>交通／移動</div>
+  <div class="legend-item"><div class="legend-dot option"></div>二擇一選項</div>
+  <div class="legend-item"><div class="legend-dot bug"></div>時間重疊 *bug</div>
+</div>
+
+<div class="chart-wrap">
+  <div class="chart" id="chart"></div>
+</div>
+
+<div class="compare-wrap">
+  <div class="compare-title">行程相同／相異對照</div>
+  <div style="overflow-x:auto;">
+  <table class="compare">
+    <thead>
+      <tr>
+        <th></th>
+        <th class="h1">行程一<br><span style="font-weight:400;font-size:0.6rem;">銀座出發</span></th>
+        <th class="h2">行程二<br><span style="font-weight:400;font-size:0.6rem;">東京・新宿出發</span></th>
+        <th class="h3">行程三<br><span style="font-weight:400;font-size:0.6rem;">東京・新宿出發</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="price-row">
+        <td>費用</td>
+        <td class="h1v">$1,534（散步）<br>$1,731（遊覽船）</td>
+        <td class="h2v">$1,534</td>
+        <td class="h3v">$1,534</td>
+      </tr>
+      <tr>
+        <td>集合地點</td>
+        <td>銀座 GinzaNovo</td>
+        <td>東京站 / 新宿</td>
+        <td>東京站 / 新宿</td>
+      </tr>
+      <tr>
+        <td>出發時間</td>
+        <td><span class="badge b1">07:50</span></td>
+        <td><span class="badge b2">07:20</span> 最早</td>
+        <td><span class="badge b3">08:50</span> 最晚</td>
+      </tr>
+      <tr>
+        <td>解散時間</td>
+        <td>17:30–18:30</td>
+        <td>18:00–18:30</td>
+        <td>18:00–18:30</td>
+      </tr>
+      <!-- 共同景點 -->
+      <tr class="same-row">
+        <td>★ 忍野八海</td>
+        <td>✔ 60–80 分</td>
+        <td>✔ 11:00 · 70分</td>
+        <td>✔ 14:30 · 60分</td>
+      </tr>
+      <tr class="same-row">
+        <td>★ 淺間公園</td>
+        <td>✔ 含於<br>複合景點</td>
+        <td>✔ 15:10 · 60分</td>
+        <td><span class="warn">⚠ 15:00 *bug<br><small>與忍野重疊<br>（車程約20分）</small></span></td>
+      </tr>
+      <tr class="same-row">
+        <td>★ 河口湖<br>大石公園</td>
+        <td>✔ 30–40 分</td>
+        <td>✔ 12:40 · 40分</td>
+        <td>✔ 11:30 · 60分<br><small>（纜車停修改）</small></td>
+      </tr>
+      <!-- 各自獨有 -->
+      <tr>
+        <td>新倉山淺間公園<br>+天梯・時計店<br>・商店街</td>
+        <td><span class="check">✔</span> 100–120分<br><small>複合行程</small></td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="cross">✗</span></td>
+      </tr>
+      <tr>
+        <td>山中湖</td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="check">✔</span> 10:00 · 40分</td>
+        <td><span class="cross">✗</span></td>
+      </tr>
+      <tr>
+        <td>日川時計店<br>（獨立）</td>
+        <td><small>含於複合行程</small></td>
+        <td><span class="check">✔</span> 14:10 · 20分</td>
+        <td><span class="cross">✗</span></td>
+      </tr>
+      <tr>
+        <td>羅森便利商店</td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="check">✔</span> 13:30 · 20分</td>
+        <td><span class="check">✔</span> 13:10 · 20分</td>
+      </tr>
+      <tr>
+        <td>河口湖遊覽船<br>or 商店街散步</td>
+        <td><span class="opt-label">二擇一</span><br>散步 $1,534<br>遊覽船 $1,731<br>各 25 分</td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="cross">✗</span></td>
+      </tr>
+      <tr>
+        <td>河口湖纜車</td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="cross">✗</span></td>
+        <td><span style="color:var(--muted)">⚠ 停修<br>→改大石公園</span></td>
+      </tr>
+      <tr>
+        <td>景點數量</td>
+        <td>3–4 處<br><small>（依選項）</small></td>
+        <td><strong>6 處</strong>（最多）</td>
+        <td>4 處</td>
+      </tr>
+      <tr>
+        <td>節奏感</td>
+        <td>🟡 輕鬆<br><small>景點集中</small></td>
+        <td>🔴 緊湊<br><small>移動最頻繁</small></td>
+        <td>🟢 適中<br><small>出發最晚</small></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<script>
+const PX_HR = 90;
+const PX_MIN = PX_HR / 60;
+const START_H = 7;
+const END_H = 19;
+const NUM_HRS = END_H - START_H;
+
+function toMin(t) {
+  const [h, m] = t.split(':').map(Number);
+  return (h * 60 + m) - START_H * 60;
+}
+
+// type: 'spot' | 'transport' | 'option_a' | 'option_b' | 'bug'
+// option_a and option_b share same time slot, displayed side by side
+const plans = [
+  {
+    id: 'p1', color: '#c9735a', label: '行程 01',
+    title: '銀座出發<br>富士吉田＋忍野',
+    sub: '集合 07:50 銀座',
+    price: '$1,534 / $1,731',
+    url: 'https://www.kkday.com/zh-tw/product/12319',
+    acts: [
+      { name: '集合 GinzaNovo', start: '07:50', dur: 10, type: 'transport' },
+      { name: '前往富士吉田', start: '08:00', dur: 90, type: 'transport' },
+      // 複合大色塊，wrap name
+      { name: '新倉山淺間公園～天梯小鎮～日川時計店～富士吉田本町通商店街', start: '09:30', dur: 110, type: 'spot', note: '09:30〜 約100–120分' },
+      { name: '前往忍野', start: '11:20', dur: 20, type: 'transport' },
+      { name: '忍野八海', start: '11:40', dur: 75, type: 'spot', note: '11:40〜 60–80分' },
+      { name: '前往河口湖', start: '13:05', dur: 15, type: 'transport' },
+      // 二擇一：左半散步、右半遊覽船
+      { name: '河口湖商店街散步', start: '13:20', dur: 40, type: 'option_a', note: '選A・$1,534' },
+      { name: '河口湖遊覽船 天晴號', start: '13:20', dur: 40, type: 'option_b', note: '選B・$1,731' },
+      { name: '大石公園', start: '14:00', dur: 35, type: 'spot', note: '30–40分' },
+      { name: '返回銀座', start: '14:20', dur: 185, type: 'transport' },
+      { name: '銀座解散', start: '17:25', dur: 65, type: 'transport' },
+    ]
+  },
+  {
+    id: 'p2', color: '#4a7c6f', label: '行程 02',
+    title: '東京・新宿出發<br>山中湖周遊',
+    sub: '集合 07:20 東京站',
+    price: '$1,534',
+    url: 'https://www.kkday.com/zh-tw/product/266389-fuji-kawaguchiko-oshino-hakkai-sengen',
+    acts: [
+      { name: '接駁（東京站）', start: '07:20', dur: 10, type: 'transport' },
+      { name: '接駁（新宿）', start: '07:50', dur: 10, type: 'transport' },
+      { name: '前往山中湖', start: '08:00', dur: 120, type: 'transport' },
+      { name: '山中湖', start: '10:00', dur: 40, type: 'spot', note: '10:00〜 40分' },
+      { name: '前往忍野', start: '10:40', dur: 20, type: 'transport' },
+      { name: '忍野八海', start: '11:00', dur: 70, type: 'spot', note: '11:00〜 70分' },
+      { name: '前往河口湖', start: '12:10', dur: 30, type: 'transport' },
+      { name: '河口湖大石公園', start: '12:40', dur: 40, type: 'spot', note: '12:40〜 40分' },
+      { name: '羅森便利商店', start: '13:30', dur: 20, type: 'spot', note: '13:30〜 20分' },
+      { name: '日川時計店', start: '14:10', dur: 20, type: 'spot', note: '14:10〜 20分' },
+      { name: '淺間公園', start: '15:10', dur: 60, type: 'spot', note: '15:10〜 60分' },
+      { name: '返回東京', start: '16:10', dur: 110, type: 'transport' },
+      { name: '新宿散團', start: '18:00', dur: 30, type: 'transport' },
+    ]
+  },
+  {
+    id: 'p3', color: '#5a6fa8', label: '行程 03',
+    title: '東京・新宿出發<br>大石公園＋淺間',
+    sub: '集合 08:50 東京站',
+    price: '$1,534',
+    url: 'https://www.kkday.com/zh-tw/product/150665-mount-fuji-tour-lake-kawaguchi-tenjozan-park-ropeway-tokyo',
+    acts: [
+      { name: '集合（東京站）', start: '08:50', dur: 10, type: 'transport' },
+      { name: '集合（新宿）', start: '09:20', dur: 10, type: 'transport' },
+      { name: '前往河口湖', start: '09:30', dur: 120, type: 'transport' },
+      { name: '河口湖大石公園', start: '11:30', dur: 60, type: 'spot', note: '11:30〜 60分（纜車停修改）' },
+      { name: 'Lawson 河口湖', start: '13:10', dur: 20, type: 'spot', note: '13:10〜 20分' },
+      { name: '前往忍野', start: '13:30', dur: 60, type: 'transport' },
+      { name: '忍野八海', start: '14:30', dur: 60, type: 'spot', note: '14:30〜 60分' },
+      { name: '淺間公園', start: '15:00', dur: 60, type: 'bug', note: '15:00〜 60分' },
+      { name: '返回東京', start: '16:00', dur: 120, type: 'transport' },
+      { name: '返回新宿', start: '18:00', dur: 30, type: 'transport' },
+    ]
+  }
+];
+
+const chart = document.getElementById('chart');
+
+// Header
+const emptyH = document.createElement('div');
+emptyH.className = 'col-header';
+emptyH.style.borderBottom = '2px solid #1a1410';
+chart.appendChild(emptyH);
+
+plans.forEach(p => {
+  const el = document.createElement('div');
+  el.className = `col-header ${p.id}`;
+  el.style.borderBottom = `2.5px solid ${p.color}`;
+  el.innerHTML = `<div class="plan-label">${p.label}</div><div class="plan-title"><a href="${p.url}" target="_blank" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:${p.color};">${p.title}</a></div><div class="plan-sub">${p.sub}</div><div class="plan-price">${p.price}</div>`;
+  chart.appendChild(el);
+});
+
+const totalH = NUM_HRS * PX_HR;
+
+// Time column
+const timeCol = document.createElement('div');
+timeCol.style.cssText = `grid-column:1;grid-row:2;position:relative;height:${totalH}px;border-right:1px solid #d4ccc4;`;
+for (let h = 0; h <= NUM_HRS; h++) {
+  const lbl = document.createElement('div');
+  lbl.style.cssText = `position:absolute;top:${h*PX_HR-7}px;right:5px;font-size:0.57rem;color:#8a7e72;white-space:nowrap;font-family:'Noto Sans TC',sans-serif;`;
+  lbl.textContent = `${String(START_H+h).padStart(2,'0')}:00`;
+  timeCol.appendChild(lbl);
+  if (h < NUM_HRS) {
+    const line = document.createElement('div');
+    line.style.cssText = `position:absolute;top:${h*PX_HR}px;left:0;right:0;border-bottom:1px dashed #d4ccc4;`;
+    timeCol.appendChild(line);
+    const half = document.createElement('div');
+    half.style.cssText = `position:absolute;top:${h*PX_HR+PX_HR/2}px;left:0;right:0;border-bottom:1px dotted #e8e2da;`;
+    timeCol.appendChild(half);
+  }
+}
+chart.appendChild(timeCol);
+
+// Plan columns
+plans.forEach((plan, idx) => {
+  const col = document.createElement('div');
+  col.style.cssText = `grid-column:${idx+2};grid-row:2;position:relative;height:${totalH}px;border-right:${idx<2?'1px solid #d4ccc4':'none'};`;
+
+  for (let h = 0; h < NUM_HRS; h++) {
+    const line = document.createElement('div');
+    line.style.cssText = `position:absolute;top:${h*PX_HR}px;left:0;right:0;border-bottom:1px dashed #d4ccc4;z-index:0;`;
+    col.appendChild(line);
+    const half = document.createElement('div');
+    half.style.cssText = `position:absolute;top:${h*PX_HR+PX_HR/2}px;left:0;right:0;border-bottom:1px dotted #ebe7e0;z-index:0;`;
+    col.appendChild(half);
+  }
+
+  ['上午','下午'].forEach((txt, si) => {
+    const sl = document.createElement('div');
+    sl.className = 'section-label';
+    sl.style.top = `${(si===0 ? 2 : 7)*PX_HR}px`;
+    sl.textContent = txt;
+    col.appendChild(sl);
+  });
+
+  plan.acts.forEach(act => {
+    const startMin = toMin(act.start);
+    if (startMin < 0 || startMin >= NUM_HRS * 60) return;
+    const top = startMin * PX_MIN;
+    // Option blocks get extra min-height so both label + name are readable
+    const minH = (act.type === 'option_a' || act.type === 'option_b') ? 60 : 20;
+    const height = Math.max(act.dur * PX_MIN, minH);
+    const block = document.createElement('div');
+
+    if (act.type === 'transport') {
+      block.className = 'transport-block';
+      block.style.cssText = `top:${top}px;height:${height}px;`;
+      if (height > 20) {
+        const lbl = document.createElement('div');
+        lbl.className = 'transport-label';
+        lbl.textContent = act.name;
+        block.appendChild(lbl);
+      }
+
+    } else if (act.type === 'option_a') {
+      block.className = 'option-block';
+      block.style.cssText = `top:${top}px;height:${height}px;left:3px;right:51%;z-index:5;`;
+      const tag = document.createElement('div'); tag.className='option-tag'; tag.textContent='選A 散步'; block.appendChild(tag);
+      const n = document.createElement('div'); n.className='option-name'; n.style.cssText='white-space:normal;font-size:0.62rem;line-height:1.3;margin-top:2px;'; n.textContent=act.name; block.appendChild(n);
+      if (act.note) { const t2=document.createElement('div'); t2.className='option-time'; t2.textContent=act.note; block.appendChild(t2); }
+
+    } else if (act.type === 'option_b') {
+      block.className = 'option-block';
+      block.style.cssText = `top:${top}px;height:${height}px;left:51%;right:3px;z-index:5;`;
+      const tag = document.createElement('div'); tag.className='option-tag'; tag.textContent='選B 遊覽船'; block.appendChild(tag);
+      const n = document.createElement('div'); n.className='option-name'; n.style.cssText='white-space:normal;font-size:0.62rem;line-height:1.3;margin-top:2px;'; n.textContent=act.name; block.appendChild(n);
+      if (act.note) { const t2=document.createElement('div'); t2.className='option-time'; t2.textContent=act.note; block.appendChild(t2); }
+
+    } else if (act.type === 'bug') {
+      block.className = 'bug-block';
+      block.style.cssText = `top:${top}px;height:${height}px;left:30%;right:3px;`;
+      const tag = document.createElement('div'); tag.className='bug-tag'; tag.textContent='* bug'; block.appendChild(tag);
+      const n = document.createElement('div'); n.className='bug-name'; n.textContent=act.name; block.appendChild(n);
+      if (height > 32 && act.note) { const t2=document.createElement('div'); t2.className='bug-time'; t2.textContent=act.note+'（與忍野重疊）'; block.appendChild(t2); }
+
+    } else {
+      // normal spot
+      block.className = 'act-block';
+      block.style.cssText = `top:${top}px;height:${height}px;background:${plan.color};`;
+      const n = document.createElement('div');
+      n.className = height > 50 ? 'act-name wrap' : 'act-name';
+      n.textContent = act.name;
+      block.appendChild(n);
+      if (act.note && height > 28) {
+        const t2 = document.createElement('div'); t2.className='act-time'; t2.textContent=act.note; block.appendChild(t2);
+      }
+    }
+
+    col.appendChild(block);
+  });
+
+  chart.appendChild(col);
+});
+
+chart.style.gridTemplateRows = `auto ${totalH}px`;
+</script>
+
+</body>
+</html>
